@@ -86,7 +86,19 @@ py -m venv .venv
 
 ---
 
-## 4) Plug in the USB and locate your input/output folders
+## 4) Confirm the channel rename TSV exists (required)
+This script expects channel names to be standardized (so it can find `F3` and `F4`). We do that using a TSV mapping file.
+
+From inside `lab_scripts`, run:
+```powershell
+dir configs\rename_channels.example.tsv
+```
+
+If PowerShell says it cannot find that file, stop and tell the instructor.
+
+---
+
+## 5) Plug in the USB and locate your input/output folders
 1. Plug in the USB stick.
 2. Open File Explorer and click the USB drive (it will look like `USB (E:)` or similar).
 3. Follow the repo-root README to find the USB `in` and `out` folders.
@@ -102,7 +114,7 @@ Tip (best way to get the EDF path):
 
 ---
 
-## 5) Run the script (this is the command)
+## 6) Run the script (this is the command)
 
 Go to the repo root (do this every time):
 ```powershell
@@ -111,12 +123,12 @@ cd $HOME\Documents\lab_scripts
 
 Run (replace only the EDF path and output folder):
 ```powershell
-.\.venv\Scripts\python.exe scripts\eeg\edf_to_fif_and_faa.py --edf "E:\lab_usb\in\est001yo.edf" --out-dir "E:\lab_usb\out"
+.\.venv\Scripts\python.exe scripts\eeg\edf_to_fif_and_faa.py --edf "E:\lab_usb\in\est001yo.edf" --out-dir "E:\lab_usb\out" --rename-tsv "configs\rename_channels.example.tsv"
 ```
 
 ---
 
-## 6) Check that the files were created
+## 7) Check that the files were created
 
 List what’s in the output folder:
 ```powershell
@@ -140,7 +152,7 @@ Get-Content "E:\lab_usb\out\edf_to_fif_and_faa.log"
 
 ---
 
-## 7) Copy outputs to USB (required)
+## 8) Copy outputs to USB (required)
 Copy these from the output folder to the USB, following the README’s folder rules:
 - `*_clean.fif`
 - `*_faa.csv`
@@ -148,7 +160,7 @@ Copy these from the output folder to the USB, following the README’s folder ru
 
 ---
 
-## 8) Next time (normal workflow)
+## 9) Next time (normal workflow)
 Go to the repo:
 ```powershell
 cd $HOME\Documents\lab_scripts
@@ -159,7 +171,7 @@ Pull updates only if the instructor tells you to:
 git pull
 ```
 
-Run the same command again (Section 5).
+Run the same command again (Section 6).
 
 ---
 
@@ -169,9 +181,5 @@ Run the same command again (Section 5).
 Your EDF path is wrong. Use “Copy as path” in File Explorer and paste it inside quotes.
 
 ### “Missing required frontal channels: F3, F4”
-FAA requires channels named `F3` and `F4` after renaming.
-The renaming map defaults to:
-```text
-configs\rename_channels.example.tsv
-```
-If it still fails, stop and tell the instructor.
+Renaming did not produce `F3` and `F4`.
+Do not guess. Stop and tell the instructor.
