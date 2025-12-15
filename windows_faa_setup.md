@@ -28,7 +28,7 @@ If py fails, try:
 ```
 python --version
 ```
-**2) Clone the repo using CLI (not ZIP, not GitHub Desktop)**
+**2) Clone the repo using the command line interface**
 
 Install Git for Windows:
 
