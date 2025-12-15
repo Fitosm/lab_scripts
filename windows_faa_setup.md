@@ -19,16 +19,15 @@ Run installer and check: ✅ Add python.exe to PATH
 
 Open PowerShell and run:
 
-'''
+```
 py --version
-'''
+```
 
 If py fails, try:
 
-'''
+```
 python --version
-'''
-
+```
 **2) Clone the repo using CLI (not ZIP, not GitHub Desktop)**
 
 Install Git for Windows:
@@ -38,9 +37,9 @@ Search “Git for Windows” and install it (defaults are fine).
 Open PowerShell.
 
 Go to Documents:
-
+```
 cd $HOME\Documents
-
+```
 
 Clone the repo (you provide the URL):
 
@@ -59,39 +58,47 @@ dir
 
 They should see requirements.txt and scripts\.
 
-3) Create a virtual environment (no activation)
+**3) Create a virtual environment (no activation)**
 
 Copy/paste:
 
+```
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
 **4) Run the script**
+
 Put the EDF somewhere simple like:
+
+```
 C:\EEG\subject1.edf
+```
 
-Run (they must replace the EDF path and output path):
+Run (you must replace the EDF path and output path):
 
+```
 .\.venv\Scripts\python.exe scripts\eeg\compute_faa_from_edf.py "C:\EEG\subject1.edf" --out "C:\EEG\faa_summary.csv" --left F3 --right F4 --montage standard_1020 --reference average --l-freq 1 --h-freq 40
+```
 
 **5) Check output**
+
 Get-Content "C:\EEG\faa_summary.csv"
 
 **6) What to do next time (normal workflow)**
 
 Enter the repo:
 
-'''
+```
 cd $HOME\Documents\YOURREPO
-'''
-
+```
 
 Pull updates:
 
-'''
+```
 git pull
-'''
+```
 
 Run the script again (same command as above).
 
