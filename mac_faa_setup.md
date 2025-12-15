@@ -1,4 +1,10 @@
-# macOS: Run `compute_faa_from_edf.py` (painstakingly detailed, first-time Terminal users)
+# macOS: Run `compute_faa_from_edf.py`
+
+## Important note about USB (read this first)
+- Your **outputs** (the `.csv` and any `.fif` files the pipeline produces) **must be copied onto the USB stick** so you can bring them back to the instructor.
+- The **step-by-step USB “shuttle” instructions** are in the **README in the root of this repo**. Read and follow those for how to move files safely.
+
+---
 
 ## What you are doing (in one sentence)
 You will (1) install Python, (2) download our lab code using **git**, (3) install the needed Python packages into a local folder, and (4) run one command that reads an EDF and writes a CSV.
@@ -160,14 +166,12 @@ Move/copy your EDF into:
 
 If your file has a different name, that’s fine—you will use its real name in the command.
 
-### 5.3 (Best way) Get the exact path to your EDF
-1. In Finder, click the EDF file.
-2. Press **Command (⌘) + I** (“Get Info”).
-3. Look at **Where:** to confirm it’s in the `EEG` folder.
-4. Use this path format in Terminal:
-   `"/Users/YOURNAME/EEG/your_file.edf"`
-
-(Quotes matter if there are spaces.)
+### 5.3 Find your Mac username (needed for the command)
+In Terminal, run:
+```bash
+whoami
+```
+Remember what it prints (that is `YOURNAME` in paths like `/Users/YOURNAME/...`).
 
 ---
 
@@ -181,52 +185,55 @@ cd ~/Documents/lab_scripts
 ```
 
 ### 6.2 Run the command (copy/paste, then edit only the EDF name if needed)
-If your EDF is `~/EEG/subject1.edf`, copy/paste this:
+Replace `YOURNAME` with the result of `whoami`.
 
 ```bash
 ./.venv/bin/python scripts/eeg/compute_faa_from_edf.py "/Users/YOURNAME/EEG/subject1.edf" --out "/Users/YOURNAME/EEG/faa_summary.csv" --left F3 --right F4 --montage standard_1020 --reference average --l-freq 1 --h-freq 40
 ```
 
-**Important:** Replace `YOURNAME` with your Mac username.
-To find your username, run:
-```bash
-whoami
-```
-
-Then use that exact name in the path.
-
 ---
 
 ## 7) Check the output CSV
-Copy/paste:
+Replace `YOURNAME` with your username:
 
 ```bash
 cat "/Users/YOURNAME/EEG/faa_summary.csv"
 ```
 
-Or open `~/EEG/faa_summary.csv` in Excel.
+---
+
+## 8) Copy outputs to the USB stick (required)
+1. Plug in the USB stick.
+2. Open Finder → look for the USB under **Locations**.
+3. Copy the **output files** onto the USB stick:
+   - the `.csv` output (e.g., `faa_summary.csv`)
+   - any `.fif` output files produced by the pipeline
+4. For the exact USB folder structure and “what goes where,” follow the **USB instructions in the README in the repo root**.
 
 ---
 
-## 8) What to do next time (normal workflow)
+## 9) What to do next time (normal workflow)
 
-### 8.1 Open Terminal
+### 9.1 Open Terminal
 Spotlight → Terminal.
 
-### 8.2 Go into the repo folder
+### 9.2 Go into the repo folder
 ```bash
 cd ~/Documents/lab_scripts
 ```
 
-### 8.3 Pull updates (only if we changed the code)
+### 9.3 Pull updates (only if we changed the code)
 ```bash
 git pull
 ```
 
-### 8.4 Run the script again (same command as above)
+### 9.4 Run the script again (same command as above)
 ```bash
 ./.venv/bin/python scripts/eeg/compute_faa_from_edf.py "/Users/YOURNAME/EEG/subject1.edf" --out "/Users/YOURNAME/EEG/faa_summary.csv" --left F3 --right F4 --montage standard_1020 --reference average --l-freq 1 --h-freq 40
 ```
+
+### 9.5 Copy outputs to the USB again
+Copy the new `.csv` and any `.fif` outputs to the USB, following the repo-root README USB instructions.
 
 ---
 
@@ -243,4 +250,3 @@ brew --version
 - Make sure the EDF is really inside `~/EEG`.
 - If there are spaces in the filename, keep the quotes.
 - You can also rename the EDF to something simple like `subject1.edf`.
-
