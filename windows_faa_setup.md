@@ -37,26 +37,30 @@ Search “Git for Windows” and install it (defaults are fine).
 Open PowerShell.
 
 Go to Documents:
+
 ```
 cd $HOME\Documents
 ```
 
 Clone the repo (you provide the URL):
 
+```
 git clone https://github.com/YOURUSER/YOURREPO.git
-
+```
 
 Enter the folder:
 
+```
 cd YOURREPO
-
+```
 
 Confirm you’re in the right place:
 
+```
 dir
+```
 
-
-They should see requirements.txt and scripts\.
+You should see requirements.txt and scripts\.
 
 **3) Create a virtual environment (no activation)**
 
@@ -84,7 +88,9 @@ Run (you must replace the EDF path and output path):
 
 **5) Check output**
 
+```
 Get-Content "C:\EEG\faa_summary.csv"
+```
 
 **6) What to do next time (normal workflow)**
 
