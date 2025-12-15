@@ -1,79 +1,57 @@
-# lab_scripts
-scripts for processing EEG files
-
-# Secure “USB shuttle” instructions (Windows students ↔ instructor)
+# Secure “USB shuttle” instructions (students → instructor)
 
 ## What goes on the USB (and what does *not*)
-- ✅ Put on USB: the **EDF** files and the **output CSV** (e.g., `faa_summary.csv`)
-- ❌ Do NOT put on USB: the whole `lab_scripts` folder, `.venv`, or anything in `C:\Users\...\AppData\...`
+- ✅ Put on USB:
+  - **EDF files** (inputs)
+  - **CSV outputs** (results)
+  - **FIF outputs** (processed EEG files)
+- ❌ Do NOT put on USB: project folders (`lab_scripts`, `hundoc`), `.venv`, screenshots, notes, or anything from `Downloads` you don’t mean to share
 
 ---
 
-## Student instructions (Windows)
-
-### 1) Use the “right” USB behavior
+## One-time setup on the USB
 1. Plug in the USB stick.
-2. If Windows asks what to do, choose **Open folder to view files**.
-3. Create a folder on the USB named exactly: `EEG_TRANSFER`
+2. Open it (File Explorer on Windows / Finder on Mac).
+3. Create a folder named exactly: `EEG_TRANSFER`
 4. Inside `EEG_TRANSFER`, create two folders:
-   - `IN`
-   - `OUT`
+   - `IN` (inputs: EDF)
+   - `OUT` (outputs: CSV + FIF)
 
-### 2) Copy EDFs to the USB (IN folder)
-1. In File Explorer, go to where your EDF is (example: `C:\EEG\`).
-2. Right-click the EDF file → **Copy**.
-3. Go to the USB → `EEG_TRANSFER\IN\`
-4. Right-click empty space → **Paste**.
-5. Wait until copying finishes (the progress bar disappears).
+Your USB should look like:
 
-### 3) Run the script using the EDF from the USB (recommended)
-This avoids extra copies and makes it obvious what file was used.
-
-In PowerShell (from inside the `lab_scripts` folder), run:
-
-```powershell
-.\.venv\Scripts\python.exe scripts\eeg\compute_faa_from_edf.py "E:\EEG_TRANSFER\IN\subject1.edf" --out "E:\EEG_TRANSFER\OUT\faa_summary_subject1.csv" --left F3 --right F4 --montage standard_1020 --reference average --l-freq 1 --h-freq 40
+```text
+EEG_TRANSFER/
+  IN/
+  OUT/
 ```
-
-**Important:** Your USB drive letter might not be `E:`. To find it:
-- File Explorer → “This PC” → look for the USB drive letter (D:, E:, F:, etc.)
-- Replace `E:` in the command with your letter.
-
-### 4) Confirm the output file exists on the USB
-In PowerShell:
-
-```powershell
-dir E:\EEG_TRANSFER\OUT
-```
-
-(Replace `E:` with your USB letter.) You should see the CSV file.
-
-### 5) Safely eject the USB (this matters)
-1. Close any Excel window that opened the CSV.
-2. In the taskbar, click the **USB/eject icon** (may be under the `^` arrow).
-3. Click **Eject USB Drive**.
-4. Wait for “Safe to remove hardware”, then unplug.
 
 ---
 
-## Instructor instructions (Mac)
+## Every time you transfer files
 
-### 1) Copy from USB to your Mac
-1. Insert USB.
-2. Finder → open `EEG_TRANSFER/OUT/`
-3. Drag the CSVs to a folder on your Mac, e.g. `~/Documents/FAA_from_students/`
+### A) Put EDF files onto the USB (IN folder)
+1. Find your EDF file on your computer.
+2. Copy it into `EEG_TRANSFER/IN/`.
+3. Wait until copying finishes (progress bar/spinner disappears).
 
-### 2) Safely eject
-Finder → click the **eject icon** next to the USB drive name → remove.
+### B) Put output files onto the USB (OUT folder)
+1. Find your output file(s) on your computer:
+   - CSV (example: `faa_summary_sub-012.csv`)
+   - FIF (example: `sub-012_clean-raw.fif`)
+2. Copy them into `EEG_TRANSFER/OUT/`.
+3. Wait until copying finishes.
 
 ---
 
-## Basic security rules (include these in the handout)
-- **If files are sensitive:** require an **encrypted USB** (hardware-encrypted) or BitLocker To Go (if available).
-- **Do not use random USB sticks:** use only the one provided for the course.
-- **Never email EDFs** and don’t upload to personal cloud (Google Drive/OneDrive) unless explicitly instructed.
-- **Use IDs, not names** in filenames (e.g., `sub-012_YO.edf`, not `JaneDoe.edf`).
-- **If a USB is lost, report immediately.**
+## Safety steps (don’t skip)
+1. Close Excel (or anything that opened the CSV) and any program that might be using the FIF.
+2. **Eject** the USB:
+   - **Windows:** click the USB/eject icon in the taskbar → Eject
+   - **Mac:** in Finder, click the eject symbol next to the drive
+3. Unplug only after it says it’s safe / the drive disappears.
 
-**One-sentence rule:** Only move the EDF and output CSV via the USB in `EEG_TRANSFER\IN` and `EEG_TRANSFER\OUT`, always eject safely, and never include names in filenames.
+---
 
+## File naming rule
+- Use **IDs only** (no names).
+  - Examples: `sub-012.edf`, `faa_summary_sub-012.csv`, `sub-012_clean-raw.fif`
