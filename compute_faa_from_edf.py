@@ -215,8 +215,27 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def validate_arguments(args: argparse.Namespace) -> None:
+    """Validate numeric parameters before running the pipeline."""
+
+    if args.alpha_low >= args.alpha_high:
+        raise SystemExit("alpha-low must be smaller than alpha-high")
+
+    if args.l_freq is not None and args.l_freq < 0:
+        raise SystemExit("l-freq must be non-negative")
+    if args.h_freq is not None and args.h_freq <= 0:
+        raise SystemExit("h-freq must be positive")
+    if (
+        args.l_freq is not None
+        and args.h_freq is not None
+        and args.l_freq >= args.h_freq
+    ):
+        raise SystemExit("l-freq must be smaller than h-freq")
+
+
 def main(argv: Iterable[str] | None = None) -> int:
     args = parse_args(argv)
+    validate_arguments(args)
     if not args.edf.exists():
         raise SystemExit(f"EDF file not found: {args.edf}")
     configure_logging(args.verbose)
