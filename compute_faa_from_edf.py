@@ -1,279 +1,237 @@
 #!/usr/bin/env python3
-"""Compute frontal alpha asymmetry (FAA) directly from an EDF file.
+"""Clean a single EDF file, save a FIF, and compute log10 FAA (F4 - F3).
+
+This student-friendly wrapper reuses the resting-state preprocessing steps
+from ``preprocess_rest_eeg.py`` (montage assignment, filtering, notch, bad
+channel detection, and interpolation). After cleaning, it computes frontal
+alpha asymmetry (FAA) as ``log10(power_F4) - log10(power_F3)`` using Welch PSD
+in the 8–13 Hz band.
 
 Usage
 -----
-python compute_faa_from_edf.py path/to/recording.edf [options]
+python scripts/eeg/edf_to_fif_and_faa.py \\
+  --edf data_raw/resting_state/est001yo.edf \\
+  --out-dir data_derived/eeg/student_clean
 
 Inputs
 ------
-- EDF file containing EEG with at least F3 and F4 channels.
-- Optional CLI parameters for montage, reference, filter bounds, alpha band, and
-  PSD segment length.
+- ``--edf``: Path to an EDF+ file with EEG channels.
+- ``--rename-tsv`` (optional): Two-column TSV mapping original channel names to
+  desired ones. Defaults to the repo template.
 
-Outputs (always next to this script)
-------------------------------------
-1) <edf_stem>_processed_raw_eeg.fif – filtered, re-referenced MNE Raw object.
-2) <edf_stem>_faa.csv – single-row FAA summary for channels F3 (left) and
-   F4 (right).
-
-Processing steps
-----------------
-1) Load EDF and optionally apply a montage.
-2) Apply re-reference and bandpass filtering.
-3) Save the processed FIF (mandatory output).
-4) Compute Welch PSD, average power in the 8–13 Hz alpha band for F3/F4, and
-   take log10 of each.
-5) Compute FAA as log10(F4) - log10(F3) and write the CSV summary.
+Outputs
+-------
+- Cleaned FIF file in ``<out-dir>`` with the suffix ``_clean.fif``.
+- FAA CSV in ``<out-dir>`` with columns for participant ID, condition,
+  ``log10_F3``, ``log10_F4``, and ``faa_log10`` (F4 - F3).
 """
-
 from __future__ import annotations
 
 import argparse
 import logging
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Tuple
 
 import mne
 import numpy as np
-import pandas as pd
+
+from scripts.eeg.preprocess_rest_eeg import (
+    TRAINING_CHANNELS,
+    apply_channel_renames,
+    detect_bad_channels_prep,
+    detect_bad_channels_ptp,
+    ensure_valid_eeg_positions,
+    load_rename_map,
+    parse_filename,
+    set_channel_types_ignore_missing,
+)
 
 ALPHA_BAND: Tuple[float, float] = (8.0, 13.0)
-DEFAULT_FILTER: Tuple[float | None, float | None] = (1.0, 40.0)
-DEFAULT_MONTAGE = "standard_1020"
-
-# Fixed channels for this project
-LEFT_CH = "F3"
-RIGHT_CH = "F4"
 
 
-def configure_logging(verbose: bool) -> None:
-    """Set up basic console logging."""
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
 
-    level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(level=level, format="%(asctime)s %(levelname)s %(message)s")
-
-
-def read_edf(path: Path, montage: str | None) -> mne.io.BaseRaw:
-    """Load the EDF file and apply an optional montage."""
-
-    logging.info("Loading EDF: %s", path)
-    raw = mne.io.read_raw_edf(path, preload=True, verbose=False)
-    if montage:
-        try:
-            raw.set_montage(montage, match_case=False, on_missing="ignore")
-            logging.info("Applied montage: %s", montage)
-        except Exception as exc:  # noqa: BLE001
-            logging.warning("Could not set montage %s: %s", montage, exc)
-    return raw
-
-
-def apply_reference_and_filter(
-    raw: mne.io.BaseRaw,
-    reference: str | None,
-    l_freq: float | None,
-    h_freq: float | None,
-) -> mne.io.BaseRaw:
-    """Apply re-referencing and bandpass filtering."""
-
-    if reference:
-        logging.info("Re-referencing to %s", reference)
-        raw.set_eeg_reference(reference)
-    if l_freq is not None or h_freq is not None:
-        logging.info("Bandpass filtering: l_freq=%s, h_freq=%s", l_freq, h_freq)
-        raw.filter(l_freq=l_freq, h_freq=h_freq)
-    return raw
-
-
-def compute_alpha_power(
-    raw: mne.io.BaseRaw,
-    *,
-    alpha_band: Tuple[float, float],
-    segment_s: float | None,
-) -> tuple[float, float]:
-    """Return alpha-band power for fixed channels F3 (left) and F4 (right)."""
-
-    if segment_s is not None and segment_s <= 0:
-        raise ValueError("Segment length must be positive when provided")
-
-    if LEFT_CH not in raw.ch_names or RIGHT_CH not in raw.ch_names:
-        missing = [ch for ch in (LEFT_CH, RIGHT_CH) if ch not in raw.ch_names]
-        raise ValueError(
-            "Missing required channel(s) in EDF (must include F3 and F4): "
-            + ", ".join(missing)
-        )
-
-    picks = mne.pick_channels(raw.ch_names, include=[LEFT_CH, RIGHT_CH])
-    psd, freqs = mne.time_frequency.psd_welch(
-        raw,
-        fmin=alpha_band[0] - 2.0,
-        fmax=alpha_band[1] + 2.0,
-        picks=picks,
-        n_per_seg=int(segment_s * raw.info["sfreq"]) if segment_s else None,
-        average="mean",
-        verbose=False,
-    )
-
-    alpha_mask = (freqs >= alpha_band[0]) & (freqs <= alpha_band[1])
-    if not np.any(alpha_mask):
-        raise RuntimeError("Alpha mask is empty; check alpha band or PSD range")
-
-    alpha_power = psd[:, alpha_mask].mean(axis=1)
-
-    # picks order is [F3, F4]
-    left_power = float(alpha_power[0])
-    right_power = float(alpha_power[1])
-    return left_power, right_power
-
-
-def to_output_frame(subject_id: str, left_power: float, right_power: float) -> pd.DataFrame:
-    """Create a single-row DataFrame summarizing FAA for the fixed channels."""
-
-    left_log = np.log10(left_power)
-    right_log = np.log10(right_power)
-    faa_log = right_log - left_log  # F4 - F3
-
-    return pd.DataFrame(
-        [
-            {
-                "subject_id": subject_id,
-                "left_channel": LEFT_CH,
-                "right_channel": RIGHT_CH,
-                "alpha_power_left": left_power,
-                "alpha_power_right": right_power,
-                "alpha_power_left_log10": left_log,
-                "alpha_power_right_log10": right_log,
-                "faa_log10": faa_log,
-            }
-        ]
-    )
-
-
-def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=(
+            "Clean an EDF file with the standard pipeline and compute frontal "
+            "alpha asymmetry (log10 F4 - log10 F3)."
+        ),
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("edf", type=Path, help="Path to the EDF recording")
+    parser.add_argument("--edf", required=True, type=Path, help="Path to EDF+ file")
     parser.add_argument(
-        "--subject-id",
-        type=str,
-        default=None,
-        help="Optional subject identifier (defaults to EDF stem)",
+        "--out-dir",
+        required=True,
+        type=Path,
+        help="Directory for the cleaned FIF and FAA CSV outputs",
     )
+    parser.add_argument("--l-freq", type=float, default=1.0, help="High-pass cutoff (Hz)")
+    parser.add_argument("--h-freq", type=float, default=40.0, help="Low-pass cutoff (Hz)")
     parser.add_argument(
-        "--montage",
-        type=str,
-        default=DEFAULT_MONTAGE,
-        help="Name of MNE montage to apply (set blank to skip)",
-    )
-    parser.add_argument(
-        "--reference",
-        type=str,
-        default="average",
-        help="EEG reference (e.g., 'average' or a channel name)",
-    )
-    parser.add_argument(
-        "--l-freq",
+        "--notch-freqs",
+        nargs="+",
         type=float,
-        default=DEFAULT_FILTER[0],
-        help="High-pass cutoff for bandpass filter (Hz)",
+        default=[50.0, 100.0],
+        help="Notch filter frequencies (Hz)",
+    )
+    parser.add_argument("--ref", default="average", help="EEG reference type")
+    parser.add_argument(
+        "--rename-tsv",
+        type=Path,
+        default=Path(__file__).resolve().parents[2]
+        / "configs"
+        / "rename_channels.example.tsv",
+        help="TSV with original and desired channel names (two columns)",
     )
     parser.add_argument(
-        "--h-freq",
-        type=float,
-        default=DEFAULT_FILTER[1],
-        help="Low-pass cutoff for bandpass filter (Hz)",
+        "--bad-method",
+        choices=["ptp", "prep"],
+        default="prep",
+        help="Bad channel detection: peak-to-peak (ptp) or PREP-inspired (prep)",
     )
-    parser.add_argument(
-        "--alpha-low",
-        type=float,
-        default=ALPHA_BAND[0],
-        help="Lower bound of alpha band (Hz)",
+    parser.add_argument("--bad-z-thresh-amp", type=float, default=5.0)
+    parser.add_argument("--bad-z-thresh-corr", type=float, default=5.0)
+    parser.add_argument("--bad-z-thresh-hf", type=float, default=5.0)
+    parser.add_argument("--bad-z-thresh-ransac", type=float, default=5.0)
+    parser.add_argument("--bad-lf-band", type=float, nargs=2, default=(1.0, 40.0))
+    parser.add_argument("--bad-hf-band", type=float, nargs=2, default=(50.0, 125.0))
+    return parser.parse_args()
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def configure_logging(out_dir: Path) -> logging.Logger:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    log_file = out_dir / "edf_to_fif_and_faa.log"
+    logger = logging.getLogger("edf_to_fif_and_faa")
+    logger.setLevel(logging.INFO)
+    logger.handlers.clear()
+    logger.propagate = False
+
+    fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    file_handler = logging.FileHandler(log_file, mode="w")
+    file_handler.setFormatter(fmt)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(fmt)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+    return logger
+
+
+def compute_faa_log10(raw: mne.io.BaseRaw) -> dict[str, float]:
+    """Return log10 PSD for F3/F4 (alpha band) and FAA as F4 - F3."""
+
+    picks = {ch: idx for idx, ch in enumerate(raw.ch_names)}
+    missing = [ch for ch in ("F3", "F4") if ch not in picks]
+    if missing:
+        raise RuntimeError(f"Missing required frontal channels: {', '.join(missing)}")
+
+    psd = raw.compute_psd(
+        method="welch",
+        fmin=ALPHA_BAND[0],
+        fmax=ALPHA_BAND[1],
+        picks=["F3", "F4"],
     )
-    parser.add_argument(
-        "--alpha-high",
-        type=float,
-        default=ALPHA_BAND[1],
-        help="Upper bound of alpha band (Hz)",
-    )
-    parser.add_argument(
-        "--segment",
-        type=float,
-        default=None,
-        help="Optional segment length in seconds for Welch PSD windows",
-    )
-    parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        help="Allow overwriting existing output files",
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Enable debug logging",
-    )
-    return parser.parse_args(argv)
+    power = psd.get_data()
+    mean_power = power.mean(axis=1)
+    log10_power = np.log10(mean_power)
+
+    log10_f3 = float(log10_power[0])
+    log10_f4 = float(log10_power[1])
+    faa = log10_f4 - log10_f3
+    return {
+        "log10_F3": log10_f3,
+        "log10_F4": log10_f4,
+        "faa_log10": faa,
+    }
 
 
-def validate_arguments(args: argparse.Namespace) -> None:
-    """Validate numeric parameters before running the pipeline."""
+# ---------------------------------------------------------------------------
+# Main workflow
+# ---------------------------------------------------------------------------
 
-    if args.alpha_low >= args.alpha_high:
-        raise SystemExit("alpha-low must be smaller than alpha-high")
+def main() -> None:
+    args = parse_args()
+    logger = configure_logging(args.out_dir)
 
-    if args.l_freq is not None and args.l_freq < 0:
-        raise SystemExit("l-freq must be non-negative")
-    if args.h_freq is not None and args.h_freq <= 0:
-        raise SystemExit("h-freq must be positive")
-    if (
-        args.l_freq is not None
-        and args.h_freq is not None
-        and args.l_freq >= args.h_freq
-    ):
-        raise SystemExit("l-freq must be smaller than h-freq")
+    try:
+        rename_map = load_rename_map(args.rename_tsv)
+    except FileNotFoundError as exc:
+        logger.error("%s", exc)
+        return
 
+    participant_id, condition = parse_filename(args.edf.stem)
+    subject_label = participant_id or "unknown"
+    logger.info("Processing %s (participant=%s, condition=%s)", args.edf.name, subject_label, condition)
 
-def main(argv: Iterable[str] | None = None) -> int:
-    args = parse_args(argv)
-    validate_arguments(args)
-    if not args.edf.exists():
-        raise SystemExit(f"EDF file not found: {args.edf}")
-    configure_logging(args.verbose)
+    raw = mne.io.read_raw_edf(args.edf, preload=True, verbose="ERROR")
 
-    script_dir = Path(__file__).resolve().parent
-    subject_id = args.subject_id or args.edf.stem
+    apply_channel_renames(raw, rename_map, args.rename_tsv.name, logger)
+    status_mapping = {"Status": "stim"}
+    set_channel_types_ignore_missing(raw, status_mapping, logger, "Status stim channel")
 
-    # Outputs always next to this script
-    out_fif = script_dir / f"{args.edf.stem}_processed_raw_eeg.fif"
-    out_csv = script_dir / f"{args.edf.stem}_faa.csv"
+    training_misc = {ch: "misc" for ch in TRAINING_CHANNELS if ch in raw.ch_names}
+    if training_misc:
+        set_channel_types_ignore_missing(raw, training_misc, logger, "training electrodes")
 
-    if out_fif.exists() and not args.overwrite:
-        raise SystemExit(f"Refusing to overwrite existing file: {out_fif}")
-    if out_csv.exists() and not args.overwrite:
-        raise SystemExit(f"Refusing to overwrite existing file: {out_csv}")
+    montage = mne.channels.make_standard_montage("standard_1020")
+    raw.set_montage(montage, on_missing="warn")
+    raw.set_eeg_reference(args.ref)
 
-    logging.info("Subject ID: %s", subject_id)
-    logging.info("FAA channels fixed: right=%s, left=%s", RIGHT_CH, LEFT_CH)
-    logging.info("Will write FIF: %s", out_fif)
-    logging.info("Will write CSV: %s", out_csv)
+    ensure_valid_eeg_positions(raw, logger)
 
-    raw = read_edf(args.edf, args.montage or None)
-    raw = apply_reference_and_filter(raw, args.reference or None, args.l_freq, args.h_freq)
+    raw.filter(args.l_freq, args.h_freq, picks="eeg", method="fir", fir_design="firwin")
+    raw.notch_filter(args.notch_freqs, picks="eeg")
 
-    # Mandatory FIF output
-    raw.save(out_fif, overwrite=args.overwrite)
+    if args.bad_method == "ptp":
+        bads = detect_bad_channels_ptp(raw)
+    else:
+        bads = detect_bad_channels_prep(
+            raw,
+            z_thresh_amp=args.bad_z_thresh_amp,
+            z_thresh_corr=args.bad_z_thresh_corr,
+            z_thresh_hf=args.bad_z_thresh_hf,
+            z_thresh_ransac=args.bad_z_thresh_ransac,
+            lf_band=tuple(args.bad_lf_band),
+            hf_band=tuple(args.bad_hf_band),
+            logger=logger,
+        )
+    raw.info["bads"] = bads
+    logger.info("Marked %d bad channels: %s", len(bads), ", ".join(bads) if bads else "none")
 
-    left_power, right_power = compute_alpha_power(
-        raw,
-        alpha_band=(args.alpha_low, args.alpha_high),
-        segment_s=args.segment,
-    )
+    try:
+        raw.interpolate_bads(reset_bads=False)
+    except ValueError as exc:  # noqa: BLE001
+        logger.warning("Skipping bad-channel interpolation: %s", exc)
 
-    df = to_output_frame(subject_id, left_power, right_power)
-    df.to_csv(out_csv, index=False)
-    logging.info("Saved outputs: %s and %s", out_fif, out_csv)
-    return 0
+    clean_fname = args.out_dir / f"{args.edf.stem}_clean.fif"
+    raw.save(clean_fname, overwrite=True)
+    logger.info("Saved cleaned FIF: %s", clean_fname)
+
+    try:
+        faa_metrics = compute_faa_log10(raw)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to compute FAA: %s", exc)
+        return
+
+    faa_csv = args.out_dir / f"{args.edf.stem}_faa.csv"
+    faa_rows = {
+        "participant_id": subject_label,
+        "condition": condition,
+        "alpha_band_hz": f"{ALPHA_BAND[0]}-{ALPHA_BAND[1]}",
+        **faa_metrics,
+    }
+    import pandas as pd
+
+    pd.DataFrame([faa_rows]).to_csv(faa_csv, index=False)
+    logger.info("Saved FAA CSV: %s", faa_csv)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
