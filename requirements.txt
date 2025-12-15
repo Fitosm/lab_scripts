@@ -1,0 +1,5 @@
+# Minimal requirements for compute_faa_from_edf.py
+# (based on the script's imports: mne, numpy, pandas)
+mne>=1.6,<2
+numpy>=1.22
+pandas>=2.0
