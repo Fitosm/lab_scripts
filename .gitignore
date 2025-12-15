@@ -1,0 +1,12 @@
+# Ignore EEG FIF files (MNE)
+*.fif
+*.fif.gz
+
+# Ignore CSV data exports / results
+*.csv
+
+# (Optional but common) Ignore derived/output directories if you use them
+# data_derived/
+# derived/
+# outputs/
+# results/
