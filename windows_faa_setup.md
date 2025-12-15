@@ -45,13 +45,13 @@ cd $HOME\Documents
 Clone the repo (you provide the URL):
 
 ```
-git clone https://github.com/YOURUSER/YOURREPO.git
+git clone https://github.com/Fitosm/lab_scripts.git
 ```
 
 Enter the folder:
 
 ```
-cd YOURREPO
+cd cd lab_scripts
 ```
 
 Confirm you’re in the right place:
