@@ -12,8 +12,8 @@
 ## B) Data and artifact policy
 - Never commit analysis outputs (FIF, FIF.gz, CSV) or large derived data. `.gitignore` already ignores these patterns; respect and extend rather than remove them.
 - Raw EDF files should stay out of commits unless explicitly curated/examples; prefer referencing external locations. The tracked `est13yo.edf` is an example—avoid adding more unless necessary.
-- Scripts assume inputs and outputs live alongside the script (same directory). `edf_to_fif_and_faa.py` writes `<stem>_clean.fif`, `<stem>_faa.csv`, and `edf_to_fif_and_faa.log` next to each EDF.
-- Keep naming consistent with the script conventions (`<stem>_clean.fif`, `<stem>_faa.csv`) and README examples (e.g., `sub-012_clean-raw.fif`, `faa_summary_sub-012.csv`).
+- Scripts assume inputs and outputs live alongside the script (same directory). `edf_to_fif_and_faa.py` writes `<stem>_clean_eeg.fif`, `<stem>_faa.csv`, and `edf_to_fif_and_faa.log` next to each EDF.
+- Keep naming consistent with the script conventions (`<stem>_clean.fif`, `<stem>_faa.csv`) and README examples (e.g., `sub-012_clean-raw_eeg.fif`, `faa_summary_sub-012.csv`).
 
 ## C) Script design rules (adding/editing scripts)
 - Prefer self-contained, runnable-from-folder scripts using `argparse`-style CLIs only when necessary; current canonical script has no CLI args and derives paths relative to its own location.
