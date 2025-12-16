@@ -1,3 +1,9 @@
+# Student guides in `docs/`
+
+This folder contains student-facing guides:
+- **USB shuttle rules:** this file explains how to move EDF inputs and FIF/CSV outputs safely.
+- **Windows setup walkthrough:** see `windows_faa_setup.md` for the full venv + PowerShell run steps.
+
 # Secure “USB shuttle” instructions (students → instructor)
 
 ## What goes on the USB (and what does *not*)

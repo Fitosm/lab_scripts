@@ -69,7 +69,7 @@ The exact USB folder structure is in the README at the root of the repo.
    ```powershell
    dir
    ```
-   You should see `requirements.txt` and a `scripts` folder.
+   You should see `requirements.txt` and the folders `docs`, `scripts`, and `examples`.
 
 ---
 
@@ -128,6 +128,11 @@ C:\EEG\work\rename_channels.tsv
 ```
 
 There must be exactly one `.tsv` in `C:\EEG\work\`.
+
+Need a template? Copy this file from the repo and rename it to `rename_channels.tsv` once it is in your working folder:
+```text
+C:\Users\<YOU>\Documents\lab_scripts\examples\rename_channels.example.tsv
+```
 
 ### 5.3 Copy the script
 Copy this file from the repo:
