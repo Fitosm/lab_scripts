@@ -2,6 +2,9 @@
 *.fif
 *.fif.gz
 
+#Ignore EDF files
+*.edf
+
 # Ignore CSV data exports / results
 *.csv
 
