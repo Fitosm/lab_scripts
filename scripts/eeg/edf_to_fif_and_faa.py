@@ -34,7 +34,7 @@ Inputs (same folder as the script)
 
 Outputs (same folder as the script)
 -----------------------------------
-- One cleaned FIF per EDF (``<stem>_clean_eeg.fif``).
+- One cleaned FIF per EDF (``<stem>_clean.eeg.fif``).
 - One FAA CSV per EDF with participant, condition, ``log10_F3``, ``log10_F4``,
   and ``faa_log10`` (F4 - F3).
 """
@@ -471,7 +471,7 @@ def process_edf(
     except ValueError as exc:  # noqa: BLE001
         logger.warning("Skipping bad-channel interpolation: %s", exc)
 
-    clean_fname = edf_path.with_name(f"{edf_path.stem}_clean_eeg.fif")
+    clean_fname = edf_path.with_name(f"{edf_path.stem}_clean.eeg.fif")
     raw.save(clean_fname, overwrite=True)
     logger.info("Saved cleaned FIF: %s", clean_fname)
 
