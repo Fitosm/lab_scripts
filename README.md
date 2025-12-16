@@ -2,7 +2,7 @@
 
 This repo provides a single EEG preprocessing + frontal alpha asymmetry (FAA) script and student-facing guides for copying files and running the pipeline on lab machines.
 
-## Repo layout (target student-friendly folders)
+## Repo layout (student-friendly folders)
 - `docs/` — guides and checklists for students
   - `README.md`: USB "shuttle" rules for moving EDF inputs and FIF/CSV outputs
   - `windows_faa_setup.md`: step-by-step PowerShell walkthrough for running the script in a venv
@@ -12,9 +12,7 @@ This repo provides a single EEG preprocessing + frontal alpha asymmetry (FAA) sc
   - `rename_channels.example.tsv`: two-column channel rename template
   - `est13yo.edf`: curated demo EDF (keep tracked only if size policy allows)
 - `requirements.txt` — minimal dependencies (mne, numpy, pandas)
-- `RESTRUCTURE_INSTRUCTIONS.md` — checklist for performing the actual folder move when tooling is available
-
-> If the folders above are not yet created (e.g., before the manual reorganization is applied), the files will still be in the repository root with the same names.
+- `RESTRUCTURE_INSTRUCTIONS.md` — checklist used to organize the repo into this layout
 
 ## Quick start: run the EEG → FIF/FAA pipeline
 1. Copy `edf_to_fif_and_faa.py`, your EDF file(s), and a channel-rename TSV (use `rename_channels.example.tsv` as a template) into the same working folder.
