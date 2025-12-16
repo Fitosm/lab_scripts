@@ -18,7 +18,7 @@ This repo provides a single EEG preprocessing + frontal alpha asymmetry (FAA) sc
 1. Copy `edf_to_fif_and_faa.py`, your EDF file(s), and a channel-rename TSV (use `rename_channels.example.tsv` as a template) into the same working folder.
 2. From that folder, run `python edf_to_fif_and_faa.py` (PowerShell users: see `docs/windows_faa_setup.md` for the full venv + command sequence).
 3. Outputs are written next to each EDF:
-   - `<stem>_clean.fif`
+   - `<stem>_clean_eeg.fif`
    - `<stem>_faa.csv`
    - `edf_to_fif_and_faa.log`
 
@@ -33,7 +33,7 @@ Follow these steps to move data safely between student machines and the instruct
 3. **Eject safely**
    - Close Excel or any program using the files, then eject the USB (Windows: taskbar eject icon; Mac: Finder eject button) before unplugging.
 4. **File naming rule**
-   - Use participant IDs only (examples: `sub-012.edf`, `sub-012_clean-raw.fif`, `faa_summary_sub-012.csv`).
+   - Use participant IDs only (examples: `sub-012.edf`, `sub-012_clean-raw_eeg.fif`, `faa_summary_sub-012.csv`).
 
 ## Need the detailed Windows guide?
 See `docs/windows_faa_setup.md` for the full PowerShell walk-through, including venv creation and the single-line run command.
