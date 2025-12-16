@@ -1,55 +1,57 @@
-# Windows: Run `edf_to_fif_and_faa.py`
+# Windows: Run `edf_to_fif_and_faa.py` (students new to PowerShell)
 
 ## What you will do
 You will:
 1) install Python once,  
-2) open PowerShell,  
-3) run a few copy/paste commands to set up the tool,  
-4) place three kinds of files in ONE folder, and  
-5) run one command: `python edf_to_fif_and_faa.py`
+2) download the lab repo once,  
+3) set up the Python environment once,  
+4) copy the EDF + TSV + script into ONE local folder on your computer,  
+5) run ONE command that processes all EDFs in that folder,  
+6) copy the output files back onto the USB stick.
 
 ---
 
-## USB rule (read this first)
-Your outputs must end up on the USB stick:
-- `*_clean.fif`
-- `*_faa.csv`
-- `edf_to_fif_and_faa.log`
+## USB rule
+The USB stick is for moving files. Do not run the script on the USB (it is too slow).
 
-The exact USB folder structure and “where to put things” is in the README at the root of the repo.
+- Copy **inputs** (EDF + TSV) from the USB to your computer.
+- Run the script on your computer.
+- Copy **outputs** back to the USB:
+  - `*_clean.fif`
+  - `*_faa.csv`
+  - `edf_to_fif_and_faa.log`
+
+The exact USB folder structure is in the README at the root of the repo.
 
 ---
 
-## 0) Vocabulary (so the instructions make sense)
-- “PowerShell” = the Windows command line app.
-- “Command” = one line you paste into PowerShell and press Enter.
-- “Folder” = a normal Windows File Explorer folder.
+## 0) Rules
+1. Use PowerShell only.
+2. Copy/paste commands exactly.
+3. If a path has spaces, wrap it in quotes.
 
 ---
 
 ## 1) One-time: Install Python 3.11+
-1. In a browser, go to:
+1. Go to:
    ```text
    https://www.python.org/downloads/windows/
    ```
 2. Download Python 3.11+ (64-bit).
-3. Run the installer.
-4. On the first screen, check: “Add python.exe to PATH”.
-5. Finish installation.
-
-Open PowerShell (Start Menu → type `PowerShell` → open it) and test:
-```powershell
-py --version
-```
-If that fails, try:
-```powershell
-python --version
-```
+3. Run the installer and check: “Add python.exe to PATH”.
+4. Open PowerShell and run:
+   ```powershell
+   py --version
+   ```
+   If that fails:
+   ```powershell
+   python --version
+   ```
 
 ---
 
-## 2) One-time: Download the lab repo (the code)
-1. Install Git for Windows (search “Git for Windows”, defaults are fine).
+## 2) One-time: Install Git + download the lab repo
+1. Install “Git for Windows” (defaults are fine).
 2. Open PowerShell.
 3. Go to Documents:
    ```powershell
@@ -59,20 +61,20 @@ python --version
    ```powershell
    git clone https://github.com/Fitosm/lab_scripts.git
    ```
-5. Enter the repo folder:
+5. Enter the folder:
    ```powershell
    cd lab_scripts
    ```
-6. Quick check:
+6. Check you see the right files:
    ```powershell
    dir
    ```
-   You should see `scripts` and `requirements.txt`.
+   You should see `requirements.txt` and a `scripts` folder.
 
 ---
 
-## 3) One-time: Set up the Python environment (no activation)
-Still inside `lab_scripts`, copy/paste these (one at a time):
+## 3) One-time: Create the environment + install packages (no activation)
+Still inside `lab_scripts`, run these one at a time:
 ```powershell
 py -m venv .venv
 ```
@@ -85,103 +87,118 @@ py -m venv .venv
 
 ---
 
-## 4) The “one folder” rule for this script (most important part)
-This script ONLY works if these are all in the SAME folder:
-- `edf_to_fif_and_faa.py`
-- your `.edf` file(s)
-- exactly ONE `*.tsv` channel rename file (two columns: original name, desired name)
-
-On Windows, the easiest place to do this is:
+## 4) Make one local working folder (on your hard drive)
+You will run everything from a local folder like:
 ```text
-USB_STICK:\out\
-```
-(Your repo README explains the correct USB folders; follow it.)
-
-### 4.1 Put the script in the output folder
-From your repo, the script is located at:
-```text
-lab_scripts\scripts\eeg\edf_to_fif_and_faa.py
+C:\EEG\work\
 ```
 
-Copy that file into your USB output folder (example):
-```text
-E:\lab_usb\out\
-```
+### 4.1 Create the folder
+1. Open File Explorer.
+2. Go to `C:\`
+3. Create a folder named `EEG`
+4. Inside `C:\EEG`, create a folder named `work`
 
-### 4.2 Put the channel rename TSV in the same output folder
-Copy the rename TSV into the SAME folder as the script (example):
+So you have:
 ```text
-E:\lab_usb\out\rename_channels.tsv
-```
-
-Important: there must be exactly ONE `.tsv` in that folder.  
-If there are two or more `.tsv` files, the script will stop.
-
-### 4.3 Put your EDF file(s) in the same output folder
-Copy your EDF(s) into the SAME folder (example):
-```text
-E:\lab_usb\out\est001yo.edf
-E:\lab_usb\out\est001yc.edf
+C:\EEG\work\
 ```
 
 ---
 
-## 5) Run the script (this is the command)
-### 5.1 Open PowerShell in the folder that contains the files
-1. Open File Explorer and go to the folder with the script + EDF + TSV (example: `E:\lab_usb\out`).
-2. Click the address bar at the top (where it shows the path), type:
+## 5) Copy files from the USB into your local working folder
+Plug in the USB stick. Follow the repo README to find where your USB `in` folder is.
+
+Copy these into:
+```text
+C:\EEG\work\
+```
+
+### 5.1 Copy your EDF file(s)
+Example:
+```text
+C:\EEG\work\est001yo.edf
+C:\EEG\work\est001yc.edf
+```
+
+### 5.2 Copy exactly one channel rename TSV
+Example:
+```text
+C:\EEG\work\rename_channels.tsv
+```
+
+There must be exactly one `.tsv` in `C:\EEG\work\`.
+
+### 5.3 Copy the script
+Copy this file from the repo:
+```text
+C:\Users\<YOU>\Documents\lab_scripts\scripts\eeg\edf_to_fif_and_faa.py
+```
+
+Into your working folder:
+```text
+C:\EEG\work\edf_to_fif_and_faa.py
+```
+
+---
+
+## 6) Open PowerShell in the working folder
+1. Open File Explorer and go to:
+   ```text
+   C:\EEG\work\
+   ```
+2. Click the address bar.
+3. Type:
    ```text
    powershell
    ```
-   and press Enter.
+4. Press Enter.
 
-### 5.2 Confirm the folder contains the right files
-Run:
+---
+
+## 7) Confirm the folder contains what it needs
+In PowerShell, run:
 ```powershell
 dir
 ```
+
 You must see:
 - `edf_to_fif_and_faa.py`
-- one or more `.edf`
+- at least one `.edf`
 - exactly one `.tsv`
 
-### 5.3 Run (copy/paste)
-This uses the environment you installed in the repo, but runs the script in your current folder.
+---
+
+## 8) Run the script (one command)
+This uses the Python environment you installed in the repo, but runs the script from your local working folder.
 
 Copy/paste:
 ```powershell
-python "$HOME\Documents\lab_scripts\.venv\Scripts\python.exe" 2>$null
+& "$HOME\Documents\lab_scripts\.venv\Scripts\python.exe" .\edf_to_fif_and_faa.py
 ```
 
-Do NOT use that. Use the correct command below (copy/paste exactly):
-
-```powershell
-$py="$HOME\Documents\lab_scripts\.venv\Scripts\python.exe"
-& $py .\edf_to_fif_and_faa.py
-```
-
-What it will do:
-- It processes every `.edf` file in this folder.
-- For each EDF, it writes:
+What it does:
+- Processes every `.edf` file in `C:\EEG\work\`
+- Creates, for each EDF:
   - `<stem>_clean.fif`
   - `<stem>_faa.csv`
-- It also writes:
+- Also creates:
   - `edf_to_fif_and_faa.log`
 
 ---
 
-## 6) Check outputs
+## 9) Check outputs (local folder)
 Run:
 ```powershell
 dir
 ```
 
-You should now see files like:
-- `est001yo_clean.fif`
-- `est001yo_faa.csv`
+You should now see:
+- `*_clean.fif`
+- `*_faa.csv`
 - `edf_to_fif_and_faa.log`
 
-To view the CSV:
+To view one CSV:
 ```powershell
 Get-Content .\est001yo_faa.csv
 ```
@@ -193,22 +210,25 @@ Get-Content .\edf_to_fif_and_faa.log
 
 ---
 
-## 7) Copy outputs to USB (required)
-If you ran the script on the USB already, the outputs are already on it.
-If you ran it somewhere else, copy these to the USB output folder (per README):
+## 10) Copy outputs back onto the USB stick (required)
+Copy these files from:
+```text
+C:\EEG\work\
+```
+to the USB output folder (as defined in the repo README):
 - `*_clean.fif`
 - `*_faa.csv`
 - `edf_to_fif_and_faa.log`
 
 ---
 
-## Common mistakes (and what to do)
+## Common problems
 
 ### “No EDF files found next to this script”
-You are not in the folder that contains the EDF(s). Use `dir` and check you see the `.edf` files.
+Your `.edf` files are not in `C:\EEG\work\`. Run `dir` and confirm you can see them.
 
 ### “No TSV found” or “Multiple TSV files found”
-Your folder must contain exactly one `.tsv` (the channel rename file). Remove extra TSVs.
+There must be exactly one `.tsv` in `C:\EEG\work\`. Remove extra TSVs.
 
 ### “Missing required frontal channels: F3, F4”
 The TSV did not rename the channels into `F3` and `F4`. Stop and tell the instructor.
