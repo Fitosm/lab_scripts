@@ -1,57 +1,41 @@
-# Secure “USB shuttle” instructions (students → instructor)
+# EEG lab scripts (student-friendly overview)
 
-## What goes on the USB (and what does *not*)
-- ✅ Put on USB:
-  - **EDF files** (inputs)
-  - **CSV outputs** (results)
-  - **FIF outputs** (processed EEG files)
-- ❌ Do NOT put on USB: project folders (`lab_scripts`, `hundoc`), `.venv`, screenshots, notes, or anything from `Downloads` you don’t mean to share
+This repo provides a single EEG preprocessing + frontal alpha asymmetry (FAA) script and student-facing guides for copying files and running the pipeline on lab machines.
 
----
+## Repo layout (target student-friendly folders)
+- `docs/` — guides and checklists for students
+  - `README.md`: USB "shuttle" rules for moving EDF inputs and FIF/CSV outputs
+  - `windows_faa_setup.md`: step-by-step PowerShell walkthrough for running the script in a venv
+- `scripts/eeg/` — runnable EEG utilities
+  - `edf_to_fif_and_faa.py`: processes EDFs into cleaned FIF + FAA CSV
+- `examples/` — sample assets students can copy alongside their own data
+  - `rename_channels.example.tsv`: two-column channel rename template
+  - `est13yo.edf`: curated demo EDF (keep tracked only if size policy allows)
+- `requirements.txt` — minimal dependencies (mne, numpy, pandas)
+- `RESTRUCTURE_INSTRUCTIONS.md` — checklist for performing the actual folder move when tooling is available
 
-## One-time setup on the USB
-1. Plug in the USB stick.
-2. Open it (File Explorer on Windows / Finder on Mac).
-3. Create a folder named exactly: `EEG_TRANSFER`
-4. Inside `EEG_TRANSFER`, create two folders:
-   - `IN` (inputs: EDF)
-   - `OUT` (outputs: CSV + FIF)
+> If the folders above are not yet created (e.g., before the manual reorganization is applied), the files will still be in the repository root with the same names.
 
-Your USB should look like:
+## Quick start: run the EEG → FIF/FAA pipeline
+1. Copy `edf_to_fif_and_faa.py`, your EDF file(s), and a channel-rename TSV (use `rename_channels.example.tsv` as a template) into the same working folder.
+2. From that folder, run `python edf_to_fif_and_faa.py` (PowerShell users: see `docs/windows_faa_setup.md` for the full venv + command sequence).
+3. Outputs are written next to each EDF:
+   - `<stem>_clean.fif`
+   - `<stem>_faa.csv`
+   - `edf_to_fif_and_faa.log`
 
-```text
-EEG_TRANSFER/
-  IN/
-  OUT/
-```
+## USB shuttle rules (students → instructor)
+Follow these steps to move data safely between student machines and the instructor without syncing the whole repo.
 
----
+1. **Set up the USB once**
+   - Create a top-level folder named `EEG_TRANSFER` with two subfolders: `IN/` (EDF inputs) and `OUT/` (FIF + CSV outputs).
+2. **Every transfer**
+   - Copy EDF files into `EEG_TRANSFER/IN/`.
+   - Copy output FIF + CSV files into `EEG_TRANSFER/OUT/`.
+3. **Eject safely**
+   - Close Excel or any program using the files, then eject the USB (Windows: taskbar eject icon; Mac: Finder eject button) before unplugging.
+4. **File naming rule**
+   - Use participant IDs only (examples: `sub-012.edf`, `sub-012_clean-raw.fif`, `faa_summary_sub-012.csv`).
 
-## Every time you transfer files
-
-### A) Put EDF files onto the USB (IN folder)
-1. Find your EDF file on your computer.
-2. Copy it into `EEG_TRANSFER/IN/`.
-3. Wait until copying finishes (progress bar/spinner disappears).
-
-### B) Put output files onto the USB (OUT folder)
-1. Find your output file(s) on your computer:
-   - CSV (example: `faa_summary_sub-012.csv`)
-   - FIF (example: `sub-012_clean-raw.fif`)
-2. Copy them into `EEG_TRANSFER/OUT/`.
-3. Wait until copying finishes.
-
----
-
-## Safety steps (don’t skip)
-1. Close Excel (or anything that opened the CSV) and any program that might be using the FIF.
-2. **Eject** the USB:
-   - **Windows:** click the USB/eject icon in the taskbar → Eject
-   - **Mac:** in Finder, click the eject symbol next to the drive
-3. Unplug only after it says it’s safe / the drive disappears.
-
----
-
-## File naming rule
-- Use **IDs only** (no names).
-  - Examples: `sub-012.edf`, `faa_summary_sub-012.csv`, `sub-012_clean-raw.fif`
+## Need the detailed Windows guide?
+See `docs/windows_faa_setup.md` for the full PowerShell walk-through, including venv creation and the single-line run command.
